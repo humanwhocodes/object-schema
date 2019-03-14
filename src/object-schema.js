@@ -63,17 +63,33 @@ class ObjectSchema {
         }
 
         if (typeof strategy.merge !== "function") {
-            throw new Error("Strategy must have a merge() method.");
+            throw new Error(`Strategy for key "${strategy.name}" must have a merge() method.`);
         }
 
         if (typeof strategy.validate !== "function") {
-            throw new Error("Strategy must have a validate() method.");
+            throw new Error(`Strategy for key "${strategy.name}" must have a validate() method.`);
         }
 
         this[strategies].set(strategy.name, strategy);
 
         if (strategy.required) {
             this[requiredKeys].push(strategy);
+        }
+    }
+
+    /**
+     * Defines multiple strategies at the same time. This is helpful for
+     * defining an array of strategies elsewhere and just passing the
+     * array directly instead of making individual method calls for each one.
+     * @param {Strategy[]} strategies An array of strategies to define.
+     * @returns {void}
+     * @throws {Error} When the strategy is missing a name.
+     * @throws {Error} When the strategy is missing a merge() method.
+     * @throws {Error} When the strategy is missing a validate() method.
+     */
+    defineStrategies(strategies) {
+        for (const strategy of strategies) {
+            this.defineStrategy(strategy);
         }
     }
 
