@@ -103,27 +103,31 @@ class ObjectSchema {
     }
 
     /**
-     * Merges two objects together to create a new object comprised of the keys
-     * of the both objects. Keys are merged based on the each key's merge
+     * Merges objects together to create a new object comprised of the keys
+     * of the all objects. Keys are merged based on the each key's merge
      * strategy.
-     * @param {Object} object1 The first object.
-     * @param {Object} object2 The second object.
-     * @returns {Object} A new object with a mix of both objects' keys.
-     * @throws {Error} If either object is invalid.
+     * @param {...Object} objects The objects to merge.
+     * @returns {Object} A new object with a mix of all objects' keys.
+     * @throws {Error} If any object is invalid.
      */
-    merge(object1, object2) {
+    merge(...objects) {
 
-        // ensure the objects are valid before merging
-        this.validate(object1);
-        this.validate(object2);
-
-        const result = {};
-
-        for (const [key, strategy] of this[strategies]) {
-            result[key] = strategy.merge.call(this, object1[key], object2[key]);
+        // double check arguments
+        if (objects.length < 2) {
+            throw new Error("merge() requires at least two arguments.");
         }
 
-        return result;
+        if (objects.some(object => (object == null || typeof object !== "object"))) {
+            throw new Error("All arguments must be objects.");
+        }
+
+        return objects.reduce((result, object) => {
+            this.validate(object);
+            for (const [key, strategy] of this[strategies]) {
+                result[key] = strategy.merge.call(this, result[key], object[key]);
+            }
+            return result;
+        }, {});
     }
 
     /**

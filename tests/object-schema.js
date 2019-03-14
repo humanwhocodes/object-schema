@@ -124,7 +124,7 @@ describe("ObjectSchema", () => {
                 validate() {}
             });
             
-            const result = schema.merge({ foo: true }, { foo: true });
+            const result = schema.merge({ foo: true }, { foo: false });
             assert.propertyVal(result, "foo", "bar");
         });
 
@@ -145,6 +145,31 @@ describe("ObjectSchema", () => {
             }]);
             
             const result = schema.merge({ foo: true, bar: 1 }, { foo: true, bar: 2 });
+            assert.propertyVal(result, "foo", "bar");
+            assert.propertyVal(result, "bar", "baz");
+        });
+
+        it("should call the merge() strategy for two keys when called on three objects", () => {
+            schema.defineStrategies([{
+                name: "foo",
+                merge() {
+                    return "bar";
+                },
+                validate() {}
+            },
+            {
+                name: "bar",
+                merge() {
+                    return "baz";
+                },
+                validate() {}
+            }]);
+            
+            const result = schema.merge(
+                { foo: true, bar: 1 },
+                { foo: true, bar: 3 },
+                { foo: false, bar: 2 }
+            );
             assert.propertyVal(result, "foo", "bar");
             assert.propertyVal(result, "bar", "baz");
         });
