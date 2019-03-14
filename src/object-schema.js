@@ -124,7 +124,10 @@ class ObjectSchema {
         return objects.reduce((result, object) => {
             this.validate(object);
             for (const [key, strategy] of this[strategies]) {
-                result[key] = strategy.merge.call(this, result[key], object[key]);
+                const value = strategy.merge.call(this, result[key], object[key]);
+                if (value !== undefined) {
+                    result[key] = value;
+                }
             }
             return result;
         }, {});

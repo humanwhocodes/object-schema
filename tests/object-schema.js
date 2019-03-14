@@ -128,6 +128,19 @@ describe("ObjectSchema", () => {
             assert.propertyVal(result, "foo", "bar");
         });
 
+        it("should omit returning the key when the merge() strategy returns undefined", () => {
+            schema.defineStrategy({
+                name: "foo",
+                merge() {
+                    return undefined;
+                },
+                validate() {}
+            });
+            
+            const result = schema.merge({ foo: true }, { foo: false });
+            assert.notProperty(result, "foo");
+        });
+
         it("should call the merge() strategy for two keys when called", () => {
             schema.defineStrategies([{
                 name: "foo",
