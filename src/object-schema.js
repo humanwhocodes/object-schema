@@ -45,6 +45,8 @@ class ObjectSchema {
      * @param {Object} strategy The strategy for the object key.
      * @param {string} strategy.name The name of the key the strategy applies to.
      * @param {boolean} [strategy.required=true] Whether the key is required.
+     * @param {string[]} [strategy.requires] Other keys that are required when
+     *      this key is present.
      * @param {Function} strategy.merge A method to call when merging two objects
      *      with the same key.
      * @param {Function} strategy.validate A method to call when validating an
@@ -126,6 +128,15 @@ class ObjectSchema {
 
             // validate existing keys
             const strategy = this[strategies].get(key);
+
+            // first check to see if any other keys are required
+            if (Array.isArray(strategy.requires)) {
+                if (!strategy.requires.every(otherKey => otherKey in object)) {
+                    throw new Error(`Key "${key}" requires keys "${strategy.requires.join("\", \"")}".`);
+                }
+            }
+
+            // now apply remaining validation strategy
             strategy.validate.call(strategy, object);
         }
 

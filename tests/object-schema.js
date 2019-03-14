@@ -144,6 +144,49 @@ describe("ObjectSchema", () => {
             schema.validate({ foo: true, bar: true });
         });
 
+        it("should not throw an error when expected keys are found with required keys", () => {
+            schema.defineStrategy({
+                name: "foo",
+                merge() {},
+                validate() {}
+            });
+
+            schema.defineStrategy({
+                name: "bar",
+                requires: ["foo"],
+                merge() {},
+                validate() {}
+            });
+            
+            schema.validate({ foo: true, bar: true });
+        });
+
+        it("should throw an error when expected keys are found without required keys", () => {
+            schema.defineStrategy({
+                name: "foo",
+                merge() { },
+                validate() { }
+            });
+
+            schema.defineStrategy({
+                name: "baz",
+                merge() { },
+                validate() { }
+            });
+
+            schema.defineStrategy({
+                name: "bar",
+                requires: ["foo", "baz"],
+                merge() { },
+                validate() { }
+            });
+
+            assert.throws(() => {
+                schema.validate({ bar: true });
+            }, /Key "bar" requires keys "foo", "baz"./);
+        });
+
+
         it("should throw an error when an expected key is found but is invalid", () => {
             schema.defineStrategy({
                 name: "foo",
