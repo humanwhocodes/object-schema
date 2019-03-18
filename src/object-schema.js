@@ -11,6 +11,34 @@
 const strategies = Symbol("strategies");
 const requiredKeys = Symbol("requiredKeys");
 
+/**
+ * Validates a schema strategy.
+ * @param {string} name The name of the key this strategy is for.
+ * @param {Object} strategy The strategy for the object key.
+ * @param {boolean} [strategy.required=true] Whether the key is required.
+ * @param {string[]} [strategy.requires] Other keys that are required when
+ *      this key is present.
+ * @param {Function} strategy.merge A method to call when merging two objects
+ *      with the same key.
+ * @param {Function} strategy.validate A method to call when validating an
+ *      object with the key.
+ * @returns {void}
+ * @throws {Error} When the strategy is missing a name.
+ * @throws {Error} When the strategy is missing a merge() method.
+ * @throws {Error} When the strategy is missing a validate() method.
+ */
+function validateDefinition(name, strategy) {
+
+    if (typeof strategy.merge !== "function") {
+        throw new Error(`Definition for key "${name}" must have a merge() method.`);
+    }
+
+    if (typeof strategy.validate !== "function") {
+        throw new Error(`Definition for key "${name}" must have a validate() method.`);
+    }
+}
+
+
 //-----------------------------------------------------------------------------
 // Class
 //-----------------------------------------------------------------------------
@@ -23,7 +51,11 @@ class ObjectSchema {
     /**
      * Creates a new instance.
      */
-    constructor() {
+    constructor(definitions) {
+
+        if (!definitions) {
+            throw new Error("Schema definitions missing.");
+        }
 
         /**
          * Track all strategies in the schema by key.
@@ -34,62 +66,20 @@ class ObjectSchema {
 
         /**
          * Separately track any keys that are required for faster validation.
-         * @type {Array}
+         * @type {Map}
          * @property requiredKeys
          */
-        this[requiredKeys] = [];
-    }
+        this[requiredKeys] = new Map();
 
-    /**
-     * Defines a new strategy for an object key.
-     * @param {Object} strategy The strategy for the object key.
-     * @param {string} strategy.name The name of the key the strategy applies to.
-     * @param {boolean} [strategy.required=true] Whether the key is required.
-     * @param {string[]} [strategy.requires] Other keys that are required when
-     *      this key is present.
-     * @param {Function} strategy.merge A method to call when merging two objects
-     *      with the same key.
-     * @param {Function} strategy.validate A method to call when validating an
-     *      object with the key.
-     * @returns {void}
-     * @throws {Error} When the strategy is missing a name.
-     * @throws {Error} When the strategy is missing a merge() method.
-     * @throws {Error} When the strategy is missing a validate() method.
-     */
-    defineStrategy(strategy) {
+        // add in all strategies
+        for (const key of Object.keys(definitions)) {
+            validateDefinition(key, definitions[key]);
 
-        if (typeof strategy.name !== "string") {
-            throw new Error("Strategy must have a \"name\" property.");
-        }
+            this[strategies].set(key, definitions[key]);
 
-        if (typeof strategy.merge !== "function") {
-            throw new Error(`Strategy for key "${strategy.name}" must have a merge() method.`);
-        }
-
-        if (typeof strategy.validate !== "function") {
-            throw new Error(`Strategy for key "${strategy.name}" must have a validate() method.`);
-        }
-
-        this[strategies].set(strategy.name, strategy);
-
-        if (strategy.required) {
-            this[requiredKeys].push(strategy);
-        }
-    }
-
-    /**
-     * Defines multiple strategies at the same time. This is helpful for
-     * defining an array of strategies elsewhere and just passing the
-     * array directly instead of making individual method calls for each one.
-     * @param {Strategy[]} strategies An array of strategies to define.
-     * @returns {void}
-     * @throws {Error} When the strategy is missing a name.
-     * @throws {Error} When the strategy is missing a merge() method.
-     * @throws {Error} When the strategy is missing a validate() method.
-     */
-    defineStrategies(strategies) {
-        for (const strategy of strategies) {
-            this.defineStrategy(strategy);
+            if (definitions[key].required) {
+                this[requiredKeys].set(key, definitions[key]);
+            }
         }
     }
 
@@ -98,7 +88,7 @@ class ObjectSchema {
      * @param {string} key The object key to find a strategy for.
      * @returns {boolean} True if the key has a strategy registered, false if not. 
      */
-    hasStrategyFor(key) {
+    hasKey(key) {
         return this[strategies].has(key);
     }
 
@@ -145,7 +135,7 @@ class ObjectSchema {
         for (const key of Object.keys(object)) {
 
             // check to see if the key is defined
-            if (!this.hasStrategyFor(key)) {
+            if (!this.hasKey(key)) {
                 throw new Error(`Unexpected key "${key}" found.`);
             }
 
@@ -160,13 +150,18 @@ class ObjectSchema {
             }
 
             // now apply remaining validation strategy
-            strategy.validate.call(strategy, object);
+            try {
+                strategy.validate.call(strategy, object);
+            } catch (ex) {
+                ex.message = `Key "${key}": ` + ex.message;
+                throw ex;
+            }
         }
 
         // ensure required keys aren't missing
-        for (const strategy of this[requiredKeys]) {
-            if (!(strategy.name in object)) {
-                throw new Error(`Missing required key "${strategy.name}".`);
+        for (const [key] of this[requiredKeys]) {
+            if (!(key in object)) {
+                throw new Error(`Missing required key "${key}".`);
             }
         }
 

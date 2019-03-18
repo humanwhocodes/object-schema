@@ -20,88 +20,43 @@ describe("ObjectSchema", () => {
 
     let schema;
 
-    beforeEach(() => {
-        schema = new ObjectSchema();
-    });
-
-    describe("defineStrategy()", () => {
+    describe("new ObjectSchema()", () => {
 
         it("should add a new key when a strategy is passed", () => {
-            schema.defineStrategy({
-                name: "foo",
-                merge() {},
-                validate() {}
-            });
-
-            assert.isTrue(schema.hasStrategyFor("foo"));
-        });
-
-        it("should throw an error when a strategy is missing a name", () => {
-            assert.throws(() => {
-                schema.defineStrategy({
+            schema = new ObjectSchema({
+                foo: {
                     merge() {},
                     validate() {}
-                });
-            }, /Strategy must have a "name" property/);
+                }
+            });
+
+            assert.isTrue(schema.hasKey("foo"));
         });
 
         it("should throw an error when a strategy is missing a merge() method", () => {
             assert.throws(() => {
-                schema.defineStrategy({
-                    name: "foo",
-                    validate() {}
+                schema = new ObjectSchema({
+                    foo: {
+                        validate() { }
+                    }
                 });
-            }, /Strategy for key "foo" must have a merge\(\) method/);
-        });
-
-        it("should throw an error when a strategy is missing a validate() method", () => {
-            assert.throws(() => {
-                schema.defineStrategy({
-                    name: "foo",
-                    merge() {}
-                });
-            }, /Strategy for key "foo" must have a validate\(\) method/);
-        });
-
-    });
-
-    describe("defineStrategies()", () => {
-
-        it("should add a new key when a strategy is passed", () => {
-            schema.defineStrategies([{
-                name: "foo",
-                merge() { },
-                validate() { }
-            }]);
-
-            assert.isTrue(schema.hasStrategyFor("foo"));
-        });
-
-        it("should throw an error when a strategy is missing a name", () => {
-            assert.throws(() => {
-                schema.defineStrategies([{
-                    merge() { },
-                    validate() { }
-                }]);
-            }, /Strategy must have a "name" property/);
+            }, /Definition for key "foo" must have a merge\(\) method/);
         });
 
         it("should throw an error when a strategy is missing a merge() method", () => {
             assert.throws(() => {
-                schema.defineStrategies([{
-                    name: "foo",
-                    validate() { }
-                }]);
-            }, /Strategy for key "foo" must have a merge\(\) method/);
+                schema = new ObjectSchema();
+            }, /Schema definitions missing/);
         });
 
         it("should throw an error when a strategy is missing a validate() method", () => {
             assert.throws(() => {
-                schema.defineStrategies([{
-                    name: "foo",
-                    merge() { }
-                }]);
-            }, /Strategy for key "foo" must have a validate\(\) method/);
+                schema = new ObjectSchema({
+                    foo: {
+                        merge() { },
+                    }
+                });
+            }, /Definition for key "foo" must have a validate\(\) method/);
         });
 
     });
@@ -110,31 +65,36 @@ describe("ObjectSchema", () => {
     describe("merge()", () => {
 
         it("should throw an error when an unexpected key is found", () => {
+            let schema = new ObjectSchema({});
+
             assert.throws(() => {
                 schema.merge({ foo: true }, { foo: true });
             }, /Unexpected key "foo"/);
         });
 
         it("should call the merge() strategy for one key when called", () => {
-            schema.defineStrategy({
-                name: "foo",
-                merge() {
-                    return "bar";
-                },
-                validate() {}
-            });
             
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate() {}
+                }
+            });
+
             const result = schema.merge({ foo: true }, { foo: false });
             assert.propertyVal(result, "foo", "bar");
         });
 
         it("should omit returning the key when the merge() strategy returns undefined", () => {
-            schema.defineStrategy({
-                name: "foo",
-                merge() {
-                    return undefined;
-                },
-                validate() {}
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return undefined;
+                    },
+                    validate() { }
+                }
             });
             
             const result = schema.merge({ foo: true }, { foo: false });
@@ -142,20 +102,20 @@ describe("ObjectSchema", () => {
         });
 
         it("should call the merge() strategy for two keys when called", () => {
-            schema.defineStrategies([{
-                name: "foo",
-                merge() {
-                    return "bar";
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate() { }
                 },
-                validate() {}
-            },
-            {
-                name: "bar",
-                merge() {
-                    return "baz";
-                },
-                validate() {}
-            }]);
+                bar: {
+                    merge() {
+                        return "baz";
+                    },
+                    validate() {}
+                }
+            });
             
             const result = schema.merge({ foo: true, bar: 1 }, { foo: true, bar: 2 });
             assert.propertyVal(result, "foo", "bar");
@@ -163,20 +123,20 @@ describe("ObjectSchema", () => {
         });
 
         it("should call the merge() strategy for two keys when called on three objects", () => {
-            schema.defineStrategies([{
-                name: "foo",
-                merge() {
-                    return "bar";
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate() { }
                 },
-                validate() {}
-            },
-            {
-                name: "bar",
-                merge() {
-                    return "baz";
-                },
-                validate() {}
-            }]);
+                bar: {
+                    merge() {
+                        return "baz";
+                    },
+                    validate() { }
+                }
+            });
             
             const result = schema.merge(
                 { foo: true, bar: 1 },
@@ -192,72 +152,84 @@ describe("ObjectSchema", () => {
     describe("validate()", () => {
 
         it("should throw an error when an unexpected key is found", () => {
+            let schema = new ObjectSchema({});
             assert.throws(() => {
                 schema.validate({ foo: true });
             }, /Unexpected key "foo"/);
         });
 
         it("should not throw an error when an expected key is found", () => {
-            schema.defineStrategy({
-                name: "foo",
-                merge() {},
-                validate() {}
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate() {}
+                }
             });
             
             schema.validate({ foo: true });
         });
 
         it("should not throw an error when expected keys are found", () => {
-            schema.defineStrategy({
-                name: "foo",
-                merge() {},
-                validate() {}
-            });
-
-            schema.defineStrategy({
-                name: "bar",
-                merge() {},
-                validate() {}
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate() {}
+                },
+                bar: {
+                    merge() {
+                        return "baz";
+                    },
+                    validate() {}
+                }
             });
             
             schema.validate({ foo: true, bar: true });
         });
 
         it("should not throw an error when expected keys are found with required keys", () => {
-            schema.defineStrategy({
-                name: "foo",
-                merge() {},
-                validate() {}
-            });
-
-            schema.defineStrategy({
-                name: "bar",
-                requires: ["foo"],
-                merge() {},
-                validate() {}
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate() { }
+                },
+                bar: {
+                    requires: ["foo"],
+                    merge() {
+                        return "baz";
+                    },
+                    validate() { }
+                }
             });
             
             schema.validate({ foo: true, bar: true });
         });
 
         it("should throw an error when expected keys are found without required keys", () => {
-            schema.defineStrategy({
-                name: "foo",
-                merge() { },
-                validate() { }
-            });
-
-            schema.defineStrategy({
-                name: "baz",
-                merge() { },
-                validate() { }
-            });
-
-            schema.defineStrategy({
-                name: "bar",
-                requires: ["foo", "baz"],
-                merge() { },
-                validate() { }
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate() { }
+                },
+                baz: {
+                    merge() {
+                        return "baz";
+                    },
+                    validate() { }
+                },
+                bar: {
+                    name: "bar",
+                    requires: ["foo", "baz"],
+                    merge() { },
+                    validate() { }
+                }
             });
 
             assert.throws(() => {
@@ -267,26 +239,32 @@ describe("ObjectSchema", () => {
 
 
         it("should throw an error when an expected key is found but is invalid", () => {
-            schema.defineStrategy({
-                name: "foo",
-                merge() { },
-                validate() {
-                    throw new Error("Invalid key: " + this.name);
+
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate() {
+                        throw new Error("Invalid key.");
+                    }
                 }
             });
 
             assert.throws(() => {
                 schema.validate({ foo: true });
-            }, /Invalid key: foo/);
+            }, /Key "foo": Invalid key/);
         });
 
         it("should throw an error when a required key is missing", () => {
-            schema.defineStrategy({
-                name: "foo",
-                required: true,
-                merge() { },
-                validate() {
-                    throw new Error("Invalid key: " + this.name);
+
+            schema = new ObjectSchema({
+                foo: {
+                    required: true,
+                    merge() {
+                        return "bar";
+                    },
+                    validate() {}
                 }
             });
 
