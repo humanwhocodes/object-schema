@@ -29,15 +29,10 @@ Use CommonJS to get access to the `ObjectSchema` constructor:
 ```js
 const { ObjectSchema } = require("@humanwhocodes/object-schema");
 
-const schema = new ObjectSchema();
+const schema = new ObjectSchema({
 
-// there is also schema.defineStrategy() to just define one at a time
-
-schema.defineStrategies([
-
-    // define a strategy for the "downloads" key
-    {
-        name: "downloads",
+    // define a definition for the "downloads" key
+    downloads: {
         required: true,
         merge(value1, value2) {
             return value1 + value2;
@@ -50,8 +45,7 @@ schema.defineStrategies([
     },
 
     // define a strategy for the "versions" key
-    {
-        name: "versions",
+    version: {
         required: true,
         merge(value1, value2) {
             return value1.concat(value2);
@@ -62,7 +56,7 @@ schema.defineStrategies([
             }
         }
     }
-]);
+});
 
 const record1 = {
     downloads: 25,
@@ -111,17 +105,16 @@ const result = {
 If the merge strategy for a key returns `undefined`, then the key will not appear in the final object. For example:
 
 ```js
-const schema = new ObjectSchema();
-
-schema.defineStrategy({
-    name: "date",
-    merge() {
-        return undefined;
-    },
-    validate(value) {
-        Date.parse(value);  // throws an error when invalid
+const schema = new ObjectSchema({
+    date: {
+        merge() {
+            return undefined;
+        },
+        validate(value) {
+            Date.parse(value);  // throws an error when invalid
+        }
     }
-})
+});
 
 const object1 = { date: "5/5/2005" };
 const object2 = { date: "6/6/2006" };
@@ -138,9 +131,8 @@ If you'd like the presence of one key to require the presence of another key, yo
 ```js
 const schema = new ObjectSchema();
 
-schema.defineStrategies([
-    {
-        name: "date",
+const schema = new ObjectSchema({
+    date: {
         merge() {
             return undefined;
         },
@@ -148,10 +140,7 @@ schema.defineStrategies([
             Date.parse(value);  // throws an error when invalid
         }
     },
-
-    // the key "time" requires that "date" be present
-    {
-        name: "time",
+    time: {
         requires: ["date"],
         merge(first, second) {
             return second;
@@ -160,8 +149,7 @@ schema.defineStrategies([
             // ...
         }
     }
-
-]);
+});
 
 // throws error: Key "time" requires keys "date"
 schema.validate({
