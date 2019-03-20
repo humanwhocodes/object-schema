@@ -72,6 +72,21 @@ describe("ObjectSchema", () => {
             }, /Unexpected key "foo"/);
         });
 
+        it("should throw an error when merge() throws an error", () => {
+            let schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        throw new Error("Boom!");
+                    },
+                    validate() {}
+                }
+            });
+
+            assert.throws(() => {
+                schema.merge({ foo: true }, { foo: true });
+            }, /Key "foo": Boom!/);
+        });
+
         it("should call the merge() strategy for one key when called", () => {
             
             schema = new ObjectSchema({
