@@ -112,12 +112,16 @@ class ObjectSchema {
         }
 
         return objects.reduce((result, object) => {
+            
             this.validate(object);
+            
             for (const [key, strategy] of this[strategies]) {
                 try {
-                    const value = strategy.merge.call(this, result[key], object[key]);
-                    if (value !== undefined) {
-                        result[key] = value;
+                    if (key in result || key in object) {
+                        const value = strategy.merge.call(this, result[key], object[key]);
+                        if (value !== undefined) {
+                            result[key] = value;
+                        }
                     }
                 } catch (ex) {
                     ex.message = `Key "${key}": ` + ex.message;

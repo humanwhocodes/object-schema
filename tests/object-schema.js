@@ -102,6 +102,23 @@ describe("ObjectSchema", () => {
             assert.propertyVal(result, "foo", "bar");
         });
 
+        it("should not call the merge() strategy when both objects don't contain the key", () => {
+            
+            let called = false;
+
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        called = true;
+                    },
+                    validate() {}
+                }
+            });
+
+            const result = schema.merge({}, {});
+            assert.isFalse(called, "The merge() strategy should not have been called.");
+        });
+
         it("should omit returning the key when the merge() strategy returns undefined", () => {
             schema = new ObjectSchema({
                 foo: {
