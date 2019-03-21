@@ -160,7 +160,7 @@ class ObjectSchema {
 
             // now apply remaining validation strategy
             try {
-                strategy.validate.call(strategy, object);
+                strategy.validate.call(strategy, object[key]);
             } catch (ex) {
                 ex.message = `Key "${key}": ` + ex.message;
                 throw ex;

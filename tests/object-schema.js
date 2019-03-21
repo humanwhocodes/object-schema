@@ -115,7 +115,7 @@ describe("ObjectSchema", () => {
                 }
             });
 
-            const result = schema.merge({}, {});
+            schema.merge({}, {});
             assert.isFalse(called, "The merge() strategy should not have been called.");
         });
 
@@ -197,6 +197,21 @@ describe("ObjectSchema", () => {
                         return "bar";
                     },
                     validate() {}
+                }
+            });
+            
+            schema.validate({ foo: true });
+        });
+
+        it("should pass the property value into validate() when key is found", () => {
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate(value) {
+                        assert.isTrue(value);
+                    }
                 }
             });
             
