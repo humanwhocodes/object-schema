@@ -40,7 +40,7 @@ describe("ObjectSchema", () => {
                         validate() { }
                     }
                 });
-            }, /Definition for key "foo" must have a merge\(\) method/);
+            }, /Definition for key "foo" must have a merge property/);
         });
 
         it("should throw an error when a strategy is missing a merge() method", () => {
@@ -177,6 +177,38 @@ describe("ObjectSchema", () => {
             );
             assert.propertyVal(result, "foo", "bar");
             assert.propertyVal(result, "bar", "baz");
+        });
+
+        it("should call the merge() strategy when defined as 'overwrite'", () => {
+            schema = new ObjectSchema({
+                foo: {
+                    merge: "overwrite",
+                    validate() { }
+                }
+            });
+            
+            const result = schema.merge(
+                { foo: true },
+                { foo: false }
+            );
+            assert.propertyVal(result, "foo", false);
+        });
+
+        it("should call the merge() strategy when defined as 'assign'", () => {
+            schema = new ObjectSchema({
+                foo: {
+                    merge: "assign",
+                    validate() { }
+                }
+            });
+            
+            const result = schema.merge(
+                { foo: { bar: true } },
+                { foo: { baz: false } }
+            );
+
+            assert.strictEqual(result.foo.bar, true);
+            assert.strictEqual(result.foo.baz, false);
         });
 
     });

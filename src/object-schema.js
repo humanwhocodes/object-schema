@@ -5,6 +5,12 @@
 "use strict";
 
 //-----------------------------------------------------------------------------
+// Requirements
+//-----------------------------------------------------------------------------
+
+const { MergeStrategy } = require("./merge-strategy");
+
+//-----------------------------------------------------------------------------
 // Private
 //-----------------------------------------------------------------------------
 
@@ -29,12 +35,20 @@ const requiredKeys = Symbol("requiredKeys");
  */
 function validateDefinition(name, strategy) {
 
+    if (typeof strategy.merge === "string") {
+        if (!(strategy.merge in MergeStrategy)) {
+            throw new TypeError(`Definition for key "${name}" missing valid merge strategy.`);
+        }
+
+        return;
+    }
+
     if (typeof strategy.merge !== "function") {
-        throw new Error(`Definition for key "${name}" must have a merge() method.`);
+        throw new TypeError(`Definition for key "${name}" must have a merge property.`);
     }
 
     if (typeof strategy.validate !== "function") {
-        throw new Error(`Definition for key "${name}" must have a validate() method.`);
+        throw new TypeError(`Definition for key "${name}" must have a validate() method.`);
     }
 }
 
@@ -74,6 +88,14 @@ class ObjectSchema {
         // add in all strategies
         for (const key of Object.keys(definitions)) {
             validateDefinition(key, definitions[key]);
+
+            // normalize the merge method in case there's a string
+            if (typeof definitions[key].merge === "string") {
+                definitions[key] = {
+                    ...definitions[key],
+                    merge: MergeStrategy[definitions[key].merge]
+                };
+            };
 
             this[strategies].set(key, definitions[key]);
 
