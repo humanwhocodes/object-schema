@@ -9,6 +9,7 @@
 //-----------------------------------------------------------------------------
 
 const { MergeStrategy } = require("./merge-strategy");
+const { ValidationStrategy } = require("./validation-strategy");
 
 //-----------------------------------------------------------------------------
 // Private
@@ -39,15 +40,15 @@ function validateDefinition(name, strategy) {
         if (!(strategy.merge in MergeStrategy)) {
             throw new TypeError(`Definition for key "${name}" missing valid merge strategy.`);
         }
-
-        return;
-    }
-
-    if (typeof strategy.merge !== "function") {
+    } else if (typeof strategy.merge !== "function") {
         throw new TypeError(`Definition for key "${name}" must have a merge property.`);
     }
 
-    if (typeof strategy.validate !== "function") {
+    if (typeof strategy.validate === "string") {
+        if (!(strategy.validate in ValidationStrategy)) {
+            throw new TypeError(`Definition for key "${name}" missing valid validation strategy.`);
+        }
+    } else if (typeof strategy.validate !== "function") {
         throw new TypeError(`Definition for key "${name}" must have a validate() method.`);
     }
 }
@@ -182,7 +183,10 @@ class ObjectSchema {
 
             // now apply remaining validation strategy
             try {
-                strategy.validate.call(strategy, object[key]);
+                const validate = (typeof strategy.validate === "string")
+                    ? ValidationStrategy[strategy.validate]
+                    : strategy.validate;
+                validate.call(strategy, object[key]);
             } catch (ex) {
                 ex.message = `Key "${key}": ` + ex.message;
                 throw ex;

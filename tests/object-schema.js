@@ -59,6 +59,28 @@ describe("ObjectSchema", () => {
             }, /Definition for key "foo" must have a validate\(\) method/);
         });
 
+        it("should throw an error when merge is an invalid string", () => {
+            assert.throws(() => {
+                new ObjectSchema({
+                    foo: {
+                        merge: "bar",
+                        validate() { }
+                    }
+                });
+            }, /key "foo" missing valid merge strategy/);
+        });
+
+        it("should throw an error when validate is an invalid string", () => {
+            assert.throws(() => {
+                new ObjectSchema({
+                    foo: {
+                        merge: "assign",
+                        validate: "s"
+                    }
+                });
+            }, /key "foo" missing valid validation strategy/);
+        });
+
     });
 
 
@@ -85,6 +107,7 @@ describe("ObjectSchema", () => {
             assert.throws(() => {
                 schema.merge({ foo: true }, { foo: true });
             }, /Key "foo": Boom!/);
+        
         });
 
         it("should call the merge() strategy for one key when called", () => {
@@ -333,6 +356,38 @@ describe("ObjectSchema", () => {
             assert.throws(() => {
                 schema.validate({ foo: true });
             }, /Key "foo": Invalid key/);
+        });
+
+        it("should throw an error when an expected key is found but is invalid with a string validator", () => {
+
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate: "string"
+                }
+            });
+
+            assert.throws(() => {
+                schema.validate({ foo: true });
+            }, /Key "foo": Expected a string/);
+        });
+
+        it("should throw an error when an expected key is found but is invalid with a number validator", () => {
+
+            schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        return "bar";
+                    },
+                    validate: "number"
+                }
+            });
+
+            assert.throws(() => {
+                schema.validate({ foo: true });
+            }, /Key "foo": Expected a number/);
         });
 
         it("should throw an error when a required key is missing", () => {

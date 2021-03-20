@@ -100,6 +100,48 @@ const result = {
 
 ## Tips and Tricks
 
+### Named merge strategies
+
+Instead of specifying a `merge()` method, you can specify one of the following strings to use a default merge strategy:
+
+* `"assign"` - use `Object.assign()` to merge the two values into one object.
+* `"overwrite"` - the second value always replaces the first.
+* `"replace"` - the second value replaces the first if the second is not `undefined`.
+
+For example:
+
+```js
+const schema = new ObjectSchema({
+    name: {
+        merge: "replace",
+        validate() {}
+    }
+});
+```
+
+### Named validation strategies
+
+Instead of specifying a `validate()` method, you can specify one of the following strings to use a default validation strategy:
+
+* `"array"` - value must be an array.
+* `"boolean"` - value must be a boolean.
+* `"number"` - value must be a number.
+* `"object"` - value must be an object.
+* `"object?"` - value must be an object or null.
+* `"string"` - value must be a string.
+* `"string!"` - value must be a non-empty string.
+
+For example:
+
+```js
+const schema = new ObjectSchema({
+    name: {
+        merge: "replace",
+        validate: "string"
+    }
+});
+```
+
 ### Remove Keys During Merge
 
 If the merge strategy for a key returns `undefined`, then the key will not appear in the final object. For example:
