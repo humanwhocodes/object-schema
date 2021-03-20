@@ -17,9 +17,25 @@ class MergeStrategy {
      * Merges two keys by overwriting the first with the second.
      * @param {*} value1 The value from the first object key. 
      * @param {*} value2 The value from the second object key.
+     * @returns {*} The second value.
      */
     static overwrite(value1, value2) {
         return value2;
+    }
+
+    /**
+     * Merges two keys by replacing the first with the second only if the
+     * second is defined.
+     * @param {*} value1 The value from the first object key. 
+     * @param {*} value2 The value from the second object key.
+     * @returns {*} The second value if it is defined.
+     */
+    static replace(value1, value2) {
+        if (typeof value2 !== "undefined") {
+            return value2;
+        }
+
+        return value1;
     }
 
     /**

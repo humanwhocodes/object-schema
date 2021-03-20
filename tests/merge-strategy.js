@@ -21,9 +21,28 @@ describe("MergeStrategy", () => {
 
     describe("overwrite()", () => {
 
-        it("should overwrite the first value with the second when called", () => {
+        it("should overwrite the first value with the second when the second is defined", () => {
             const result = MergeStrategy.overwrite(1, 2);
             assert.strictEqual(result, 2);
+        });
+
+        it("should overwrite the first value with the second when the second is undefined", () => {
+            const result = MergeStrategy.overwrite(1, undefined);
+            assert.strictEqual(result, undefined);
+        });
+
+    });
+
+    describe("replace()", () => {
+
+        it("should overwrite the first value with the second when the second is defined", () => {
+            const result = MergeStrategy.replace(1, 2);
+            assert.strictEqual(result, 2);
+        });
+
+        it("should return the first value when the second is undefined", () => {
+            const result = MergeStrategy.replace(1, undefined);
+            assert.strictEqual(result, 1);
         });
 
     });
