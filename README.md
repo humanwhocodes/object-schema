@@ -142,6 +142,34 @@ const schema = new ObjectSchema({
 });
 ```
 
+### Subschemas
+
+If you are defining a key that is, itself, an object, you can simplify the process by using a subschema. Instead of defining `merge()` and `validate()`, assign a `schema` key that contains a schema definition, like this:
+
+```js
+const schema = new ObjectSchema({
+    name: {
+        schema: {
+            first: {
+                merge: "replace",
+                validate: "string"
+            },
+            last: {
+                merge: "replace",
+                validate: "string"
+            }
+        }
+    }
+});
+
+schema.validate({
+    name: {
+        first: "n",
+        last: "z"
+    }
+});
+```
+
 ### Remove Keys During Merge
 
 If the merge strategy for a key returns `undefined`, then the key will not appear in the final object. For example:

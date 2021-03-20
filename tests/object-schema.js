@@ -234,6 +234,68 @@ describe("ObjectSchema", () => {
             assert.strictEqual(result.foo.baz, false);
         });
 
+        it("should call the merge strategy when there's a subschema", () => {
+
+            schema = new ObjectSchema({
+                name: {
+                    schema: {
+                        first: {
+                            merge: "replace",
+                            validate: "string"
+                        },
+                        last: {
+                            merge: "replace",
+                            validate: "string"
+                        }
+                    }
+                }
+            });
+
+            const result = schema.merge({
+                name: {
+                    first: "n",
+                    last: "z"
+                }
+            }, {
+                name: {
+                    first: "g"
+                }
+            });
+
+            assert.strictEqual(result.name.first, "g");
+            assert.strictEqual(result.name.last, "z");
+        });
+
+        it("should not error when calling the merge strategy when there's a subschema and no matching key in second object", () => {
+
+            schema = new ObjectSchema({
+                name: {
+                    schema: {
+                        first: {
+                            merge: "replace",
+                            validate: "string"
+                        },
+                        last: {
+                            merge: "replace",
+                            validate: "string"
+                        }
+                    }
+                }
+            });
+
+            const result = schema.merge({
+                name: {
+                    first: "n",
+                    last: "z"
+                }
+            }, {
+            });
+
+            assert.strictEqual(result.name.first, "n");
+            assert.strictEqual(result.name.last, "z");
+        });
+
+
     });
 
     describe("validate()", () => {
@@ -405,6 +467,60 @@ describe("ObjectSchema", () => {
             assert.throws(() => {
                 schema.validate({});
             }, /Missing required key "foo"/);
+        });
+
+        it("should throw an error when a subschema is provided and the value doesn't validate", () => {
+
+            schema = new ObjectSchema({
+                name: {
+                    schema: {
+                        first: {
+                            merge: "replace",
+                            validate: "string"
+                        },
+                        last: {
+                            merge: "replace",
+                            validate: "string"
+                        }
+                    }
+                }
+            });
+
+            assert.throws(() => {
+                schema.validate({
+                    name: {
+                        first: 123,
+                        last: "z"
+                    }
+                });
+                        
+            }, /Key "name": Key "first": Expected a string/);
+        });
+
+        it("should not throw an error when a subschema is provided and the value validates", () => {
+
+            schema = new ObjectSchema({
+                name: {
+                    schema: {
+                        first: {
+                            merge: "replace",
+                            validate: "string"
+                        },
+                        last: {
+                            merge: "replace",
+                            validate: "string"
+                        }
+                    }
+                }
+            });
+
+            schema.validate({
+                name: {
+                    first: "n",
+                    last: "z"
+                }
+            });
+                    
         });
 
     });

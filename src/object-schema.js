@@ -36,11 +36,20 @@ const requiredKeys = Symbol("requiredKeys");
  */
 function validateDefinition(name, strategy) {
 
+    let hasSchema = false;
+    if (strategy.schema) {
+        if (typeof strategy.schema === "object") {
+            hasSchema = true;
+        } else {
+            throw new TypeError("Schema must be an object.");
+        }
+    }
+
     if (typeof strategy.merge === "string") {
         if (!(strategy.merge in MergeStrategy)) {
             throw new TypeError(`Definition for key "${name}" missing valid merge strategy.`);
         }
-    } else if (typeof strategy.merge !== "function") {
+    } else if (!hasSchema && typeof strategy.merge !== "function") {
         throw new TypeError(`Definition for key "${name}" must have a merge property.`);
     }
 
@@ -48,7 +57,7 @@ function validateDefinition(name, strategy) {
         if (!(strategy.validate in ValidationStrategy)) {
             throw new TypeError(`Definition for key "${name}" missing valid validation strategy.`);
         }
-    } else if (typeof strategy.validate !== "function") {
+    } else if (!hasSchema && typeof strategy.validate !== "function") {
         throw new TypeError(`Definition for key "${name}" must have a validate() method.`);
     }
 }
@@ -90,11 +99,38 @@ class ObjectSchema {
         for (const key of Object.keys(definitions)) {
             validateDefinition(key, definitions[key]);
 
+            // normalize merge and validate methods if subschema is present
+            if (typeof definitions[key].schema === "object") {
+                const schema = new ObjectSchema(definitions[key].schema);
+                definitions[key] = {
+                    ...definitions[key],
+                    merge(first, second) {
+                        if (first && second) {
+                            return schema.merge(first, second);
+                        }
+                        
+                        return MergeStrategy.assign(first, second);
+                    },
+                    validate(value) {
+                        ValidationStrategy.object(value);
+                        schema.validate(value);
+                    }
+                };
+            }
+
             // normalize the merge method in case there's a string
             if (typeof definitions[key].merge === "string") {
                 definitions[key] = {
                     ...definitions[key],
                     merge: MergeStrategy[definitions[key].merge]
+                };
+            };
+
+            // normalize the validate method in case there's a string
+            if (typeof definitions[key].validate === "string") {
+                definitions[key] = {
+                    ...definitions[key],
+                    validate: ValidationStrategy[definitions[key].validate]
                 };
             };
 
@@ -183,10 +219,7 @@ class ObjectSchema {
 
             // now apply remaining validation strategy
             try {
-                const validate = (typeof strategy.validate === "string")
-                    ? ValidationStrategy[strategy.validate]
-                    : strategy.validate;
-                validate.call(strategy, object[key]);
+                strategy.validate.call(strategy, object[key]);
             } catch (ex) {
                 ex.message = `Key "${key}": ` + ex.message;
                 throw ex;
