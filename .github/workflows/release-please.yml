@@ -11,7 +11,7 @@ jobs:
         id: release
         with:
           release-type: node
-          package-name: test-release-please
+          package-name: object-schema
       # The logic below handles the npm publication:
       - uses: actions/checkout@v4
         # these if statements ensure that a publication only occurs when
