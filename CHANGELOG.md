@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/humanwhocodes/object-schema/compare/v1.2.1...v2.0.0) (2023-10-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* Throw custom errors instead of generics.
+
+### Features
+
+* Throw custom errors instead of generics. ([c6c01d7](https://github.com/humanwhocodes/object-schema/commit/c6c01d71eb354bf7b1fb3e883c40f7bd9b61647c))
+
 ### [1.2.1](https://www.github.com/humanwhocodes/object-schema/compare/v1.2.0...v1.2.1) (2021-11-02)
 
 
