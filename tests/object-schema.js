@@ -110,6 +110,26 @@ describe("ObjectSchema", () => {
         
         });
 
+        it("should throw an error when merge() throws an error with a readonly message", () => {
+            let schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        throw {
+                            get message() {
+                                return "Boom!";
+                            }
+                        };
+                    },
+                    validate() {}
+                }
+            });
+
+            assert.throws(() => {
+                schema.merge({ foo: true }, { foo: true });
+            }, /Key "foo": Boom!/);
+        
+        });
+
         it("should call the merge() strategy for one key when called", () => {
             
             schema = new ObjectSchema({
