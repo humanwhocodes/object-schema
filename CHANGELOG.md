@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/humanwhocodes/object-schema/compare/v2.0.0...v2.0.1) (2023-10-20)
+
+
+### Bug Fixes
+
+* Custom properties should be available on thrown errors ([6ca80b0](https://github.com/humanwhocodes/object-schema/commit/6ca80b001a4ffb678b9b5544fc53322117374376))
+
 ## [2.0.0](https://github.com/humanwhocodes/object-schema/compare/v1.2.1...v2.0.0) (2023-10-18)
 
 
