@@ -130,6 +130,34 @@ describe("ObjectSchema", () => {
         
         });
 
+        it("should throw an error with custom properties when merge() throws an error with custom properties", () => {
+            let schema = new ObjectSchema({
+                foo: {
+                    merge() {
+                        throw {
+                            get message() {
+                                return "Boom!";
+                            },
+                            booya: true
+                        };
+                    },
+                    validate() {}
+                }
+            });
+
+            let errorThrown = false;
+
+            try {
+                schema.merge({ foo: true }, { foo: true });
+            } catch (ex) {
+                errorThrown = true;
+                assert.isTrue(ex.booya);
+            }
+
+            assert.isTrue(errorThrown);
+        
+        });
+
         it("should call the merge() strategy for one key when called", () => {
             
             schema = new ObjectSchema({

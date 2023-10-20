@@ -112,7 +112,7 @@ class MissingDependentKeysError extends Error {
 /**
  * Wrapper error for errors occuring during a merge or validate operation.
  */
-class WrapperError extends Error {
+class WrapperError {
 
     /**
      * Creates a new instance.
@@ -120,45 +120,14 @@ class WrapperError extends Error {
      * @param {Error} source The source error. 
      */
     constructor(key, source) {
-        super(`Key "${key}": ` + source.message);
-
-        /**
-         * The original source error.
-         * @type {Error}
-         */
-        this.source = source;
-    }
-
-    /**
-     * The stack from the original error.
-     * @returns {string}
-     */
-    get stack() {
-        return this.source.stack;
-    }
-
-    /**
-     * The line number from the original error.
-     * @returns {number}
-     */
-    get lineNumber() {
-        return this.source.lineNumber;
-    }
-
-    /**
-     * The column number from the original error.
-     * @returns {number}
-     */
-    get columnNumber() {
-        return this.source.columnNumber;
-    }
-
-    /**
-     * The filename from the original error.
-     * @returns {string}
-     */
-    get fileName() {
-        return this.source.fileName;
+        return Object.create(source, {
+            message: {
+                value: `Key "${key}": ` + source.message,
+                configurable: true,
+                writable: true,
+                enumerable: true
+            }
+        });
     }
 }
 
