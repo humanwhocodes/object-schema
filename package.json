@@ -3,6 +3,11 @@
   "version": "2.0.2",
   "description": "An object schema merger/validator",
   "main": "src/index.js",
+  "files":[
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
   "directories": {
     "test": "tests"
   },
